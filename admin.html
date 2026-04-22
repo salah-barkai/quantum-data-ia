@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quantum D&AI — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* =============================================
+   RESET & VARIABLES
+============================================= */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #070a0f;
+  --midnight: #0d1117;
+  --surface:  #161b22;
+  --surface2: #1c2330;
+  --border:   #21262d;
+  --cyan:     #00e5ff;
+  --violet:   #7b2ff7;
+  --green:    #00e676;
+  --orange:   #ff9800;
+  --red:      #f44336;
+  --text:     #e6edf3;
+  --muted:    #7d8590;
+  --white:    #ffffff;
+  --sidebar-w: 240px;
+}
+
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.5; overflow-x: hidden; }
+a { color: inherit; text-decoration: none; }
+ul { list-style: none; }
+input, select, textarea, button { font-family: inherit; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* =============================================
+   LOGIN SCREEN
+============================================= */
+#loginScreen {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  background-image:
+    linear-gradient(rgba(0,229,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 24px 80px rgba(0,0,0,.6);
+}
+
+.login-logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--cyan), var(--violet));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 0.3rem;
+}
+
+.login-sub {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  margin-bottom: 2rem;
+}
+
+.login-group { margin-bottom: 1rem; }
+.login-group label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 0.4rem; }
+.login-group input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 0.7rem 0.9rem;
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color .2s;
+}
+.login-group input:focus { border-color: var(--cyan); }
+
+.login-btn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--cyan), var(--violet));
+  color: #000;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 0.85rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: opacity .2s;
+}
+.login-btn:hover { opacity: .88; }
+
+.login-hint {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 1rem;
+  font-family: 'Space Mono', monospace;
+}
+
+/* =============================================
+   LAYOUT (hidden until login)
+============================================= */
+#adminApp {
+  display: none;
+  min-height: 100vh;
+}
+
+/* =============================================
+   SIDEBAR
+============================================= */
+#sidebar {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: var(--sidebar-w);
+  background: var(--midnight);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.sidebar-logo {
+  padding: 1.5rem 1.25rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.logo-text {
+  font-family: 'Syne', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--cyan), var(--violet));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.logo-badge {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--muted);
+  margin-top: 0.2rem;
+  letter-spacing: 0.08em;
+}
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.user-avatar {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--cyan), var(--violet));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  color: #000;
+  flex-shrink: 0;
+}
+.user-name { font-size: 0.82rem; font-weight: 600; color: var(--white); }
+.user-role { font-size: 0.68rem; color: var(--muted); }
+.online-dot {
+  width: 8px; height: 8px;
+  background: var(--green);
+  border-radius: 50%;
+  margin-left: auto;
+  box-shadow: 0 0 6px var(--green);
+}
+
+.sidebar-nav { flex: 1; padding: 1rem 0.75rem; }
+
+.nav-section-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  padding: 0.6rem 0.5rem 0.3rem;
+  margin-top: 0.5rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.83rem;
+  color: var(--muted);
+  transition: all .18s;
+  margin-bottom: 2px;
+  position: relative;
+}
+.nav-item:hover { background: var(--surface); color: var(--text); }
+.nav-item.active { background: rgba(0,229,255,.1); color: var(--cyan); }
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 20%; bottom: 20%;
+  width: 3px;
+  background: var(--cyan);
+  border-radius: 0 3px 3px 0;
+}
+
+.nav-icon { font-size: 1rem; min-width: 1.25rem; }
+
+.nav-badge {
+  margin-left: auto;
+  background: var(--violet);
+  color: var(--white);
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 10px;
+  font-family: 'Space Mono', monospace;
+}
+.nav-badge.orange { background: var(--orange); }
+.nav-badge.green { background: var(--green); color: #000; }
+
+.sidebar-footer {
+  padding: 0.75rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 0.5rem;
+}
+.sidebar-footer-btn {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.72rem;
+  padding: 0.5rem;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.sidebar-footer-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* =============================================
+   MAIN
+============================================= */
+#main {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* TOPBAR */
+.topbar {
+  position: sticky; top: 0;
+  background: rgba(7,10,15,.9);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.5rem;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 50;
+}
+.topbar-left { display: flex; flex-direction: column; }
+.topbar-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--white);
+}
+.topbar-path { font-size: 0.7rem; color: var(--muted); }
+
+.topbar-right { display: flex; align-items: center; gap: 0.75rem; }
+.topbar-search {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  outline: none;
+  width: 200px;
+  transition: border-color .2s;
+}
+.topbar-search:focus { border-color: var(--cyan); }
+
+.icon-btn {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all .2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.icon-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.notif-dot {
+  position: absolute;
+  top: 5px; right: 5px;
+  width: 7px; height: 7px;
+  background: var(--red);
+  border-radius: 50%;
+  border: 1px solid var(--bg);
+}
+
+/* CONTENT */
+.content { flex: 1; padding: 1.5rem; }
+
+/* PAGES */
+.page { display: none; }
+.page.active { display: block; }
+
+/* =============================================
+   KPI CARDS
+============================================= */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  position: relative;
+  overflow: hidden;
+  transition: transform .2s, border-color .2s;
+}
+.kpi-card:hover { transform: translateY(-2px); }
+.kpi-card.violet { border-color: rgba(123,47,247,.25); }
+.kpi-card.cyan { border-color: rgba(0,229,255,.25); }
+.kpi-card.green { border-color: rgba(0,230,118,.25); }
+.kpi-card.orange { border-color: rgba(255,152,0,.25); }
+
+.kpi-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.kpi-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+.kpi-num.violet { color: var(--violet); }
+.kpi-num.cyan { color: var(--cyan); }
+.kpi-num.green { color: var(--green); }
+.kpi-num.orange { color: var(--orange); }
+
+.kpi-change { font-size: 0.72rem; }
+.kpi-change.up { color: var(--green); }
+.kpi-change.down { color: var(--orange); }
+
+.kpi-icon {
+  position: absolute;
+  right: 1rem; top: 50%;
+  transform: translateY(-50%);
+  font-size: 2rem;
+  opacity: 0.12;
+}
+
+/* =============================================
+   CHARTS
+============================================= */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+@media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+}
+.chart-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; color: var(--white); }
+.chart-sub { font-size: 0.72rem; color: var(--muted); margin-top: 0.15rem; }
+
+.chart-period-btns { display: flex; gap: 0.3rem; }
+.period-btn {
+  background: transparent; border: 1px solid var(--border);
+  color: var(--muted); font-size: 0.68rem; padding: 0.25rem 0.55rem;
+  border-radius: 5px; cursor: pointer; transition: all .2s;
+}
+.period-btn:hover, .period-btn.active { border-color: var(--cyan); color: var(--cyan); }
+
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 120px;
+}
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.bar-fill {
+  width: 100%;
+  background: linear-gradient(180deg, var(--cyan), var(--violet));
+  border-radius: 4px 4px 0 0;
+  transition: height .3s ease;
+  opacity: 0.85;
+}
+.bar-fill:hover { opacity: 1; }
+.bar-lbl { font-size: 0.6rem; color: var(--muted); white-space: nowrap; }
+
+/* DONUT */
+.donut-wrap { display: flex; gap: 1.5rem; align-items: center; }
+.donut-svg { width: 100px; height: 100px; flex-shrink: 0; }
+.donut-legend { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+.legend-item { display: flex; justify-content: space-between; align-items: center; }
+.legend-left { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--muted); }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.legend-val { font-size: 0.75rem; font-family: 'Space Mono', monospace; color: var(--text); }
+
+/* =============================================
+   TWO-COL & DATA CARDS
+============================================= */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+@media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+
+.data-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+.data-card:last-child { margin-bottom: 0; }
+
+.data-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.data-card-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; color: var(--white); }
+
+.table-actions { display: flex; gap: 0.5rem; }
+
+/* =============================================
+   TABLES
+============================================= */
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  text-align: left;
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+tbody td {
+  padding: 0.75rem;
+  font-size: 0.82rem;
+  border-bottom: 1px solid rgba(33,38,45,.5);
+  vertical-align: middle;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: rgba(255,255,255,.02); }
+
+.td-name { font-weight: 600; color: var(--white); font-size: 0.83rem; }
+.td-company { font-size: 0.72rem; color: var(--muted); margin-top: 0.1rem; }
+
+.row-actions { display: flex; gap: 0.3rem; }
+.row-btn {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--muted); width: 28px; height: 28px; border-radius: 6px;
+  cursor: pointer; font-size: 0.8rem; transition: all .2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.row-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* =============================================
+   STATUS BADGES
+============================================= */
+.status-badge {
+  font-size: 0.65rem;
+  font-family: 'Space Mono', monospace;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.status-badge.new { background: rgba(0,229,255,.12); color: var(--cyan); border: 1px solid rgba(0,229,255,.25); }
+.status-badge.inprogress { background: rgba(255,152,0,.12); color: var(--orange); border: 1px solid rgba(255,152,0,.25); }
+.status-badge.done { background: rgba(0,230,118,.12); color: var(--green); border: 1px solid rgba(0,230,118,.25); }
+.status-badge.pending { background: rgba(123,47,247,.12); color: var(--violet); border: 1px solid rgba(123,47,247,.25); }
+
+.priority { font-size: 0.7rem; }
+.priority.high { color: var(--red); }
+.priority.med { color: var(--orange); }
+.priority.low { color: var(--green); }
+
+/* =============================================
+   ACTION BUTTONS
+============================================= */
+.action-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.75rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all .2s;
+  white-space: nowrap;
+}
+.action-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.action-btn.primary {
+  background: linear-gradient(135deg, var(--cyan), var(--violet));
+  color: #000;
+  border: none;
+  font-weight: 700;
+  font-family: 'Syne', sans-serif;
+}
+.action-btn.primary:hover { opacity: .88; }
+
+.btn-grad {
+  background: linear-gradient(135deg, var(--cyan), var(--violet));
+  color: #000;
+  border: none;
+  font-weight: 700;
+  font-family: 'Syne', sans-serif;
+  font-size: 0.82rem;
+  padding: 0.55rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity .2s;
+}
+.btn-grad:hover { opacity: .88; }
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.82rem;
+  padding: 0.55rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn-outline:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* =============================================
+   MINI LIST & ACTIVITY
+============================================= */
+.mini-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.mini-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.75rem;
+  background: var(--surface2);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.mini-list-item-left { display: flex; align-items: center; gap: 0.75rem; }
+.avatar-sm {
+  width: 30px; height: 30px;
+  background: linear-gradient(135deg, var(--violet), var(--cyan));
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--white);
+  flex-shrink: 0;
+}
+
+.activity-feed { display: flex; flex-direction: column; gap: 1rem; }
+.activity-item { display: flex; gap: 0.75rem; align-items: flex-start; }
+.activity-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.activity-text { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+.activity-text strong { color: var(--text); }
+.activity-time { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; font-family: 'Space Mono', monospace; }
+
+/* =============================================
+   PROGRESS BAR
+============================================= */
+.progress-track { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--violet)); border-radius: 3px; }
+
+/* =============================================
+   TOGGLE SWITCH
+============================================= */
+.toggle {
+  width: 36px; height: 20px;
+  background: var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  position: relative;
+  transition: background .2s;
+}
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 14px; height: 14px;
+  background: var(--muted);
+  border-radius: 50%;
+  transition: all .2s;
+}
+.toggle.on { background: rgba(0,229,255,.3); }
+.toggle.on::after { transform: translateX(16px); background: var(--cyan); }
+
+/* =============================================
+   TAGS
+============================================= */
+.tag {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--cyan);
+  background: rgba(0,229,255,.08);
+  border: 1px solid rgba(0,229,255,.2);
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+}
+
+/* =============================================
+   NOTIFICATIONS & MESSAGES
+============================================= */
+.notif-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.notif-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  align-items: flex-start;
+  transition: border-color .2s;
+}
+.notif-item.unread { border-color: rgba(0,229,255,.2); }
+.notif-item:hover { border-color: rgba(0,229,255,.35); }
+.notif-icon { font-size: 1.25rem; min-width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.notif-body { flex: 1; }
+.notif-title { font-weight: 600; color: var(--white); font-size: 0.82rem; margin-bottom: 0.25rem; }
+.notif-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+.notif-time { font-size: 0.68rem; color: var(--muted); margin-top: 0.35rem; font-family: 'Space Mono', monospace; }
+.unread-dot { width: 8px; height: 8px; background: var(--cyan); border-radius: 50%; margin-top: 4px; flex-shrink: 0; box-shadow: 0 0 6px var(--cyan); }
+
+/* =============================================
+   SETTINGS
+============================================= */
+.settings-grid {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 1.5rem;
+}
+@media (max-width: 700px) { .settings-grid { grid-template-columns: 1fr; } }
+
+.settings-nav-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.75rem;
+  height: fit-content;
+}
+.settings-nav-item {
+  padding: 0.6rem 0.75rem;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--muted);
+  transition: all .18s;
+  margin-bottom: 2px;
+}
+.settings-nav-item:hover { background: var(--surface2); color: var(--text); }
+.settings-nav-item.active { background: rgba(0,229,255,.1); color: var(--cyan); }
+
+.settings-content {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+.settings-section h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 1.25rem;
+}
+
+/* FORM GROUPS (settings) */
+.form-group { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.9rem; }
+.form-group label { font-size: 0.72rem; color: var(--muted); }
+.form-group input, .form-group select, .form-group textarea {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.83rem;
+  outline: none;
+  transition: border-color .2s;
+  width: 100%;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--cyan); }
+.form-group textarea { min-height: 90px; resize: vertical; }
+.form-group select option { background: var(--surface); }
+
+/* =============================================
+   MODALS
+============================================= */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.75);
+  backdrop-filter: blur(6px);
+  z-index: 5000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 2rem;
+  max-width: 480px;
+  width: 100%;
+  position: relative;
+  box-shadow: 0 24px 80px rgba(0,0,0,.7);
+}
+.modal-close {
+  position: absolute; top: 1rem; right: 1rem;
+  background: none; border: 1px solid var(--border);
+  color: var(--muted); width: 30px; height: 30px;
+  border-radius: 6px; cursor: pointer; font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s;
+}
+.modal-close:hover { border-color: var(--cyan); color: var(--cyan); }
+.modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; color: var(--white); margin-bottom: 1.25rem; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem; }
+
+/* =============================================
+   TOAST
+============================================= */
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--surface2);
+  border: 1px solid var(--cyan);
+  color: var(--text);
+  padding: 0.7rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.83rem;
+  z-index: 9999;
+  transition: transform .3s ease;
+  box-shadow: 0 8px 32px rgba(0,0,0,.6);
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* =============================================
+   RESPONSIVE
+============================================= */
+@media (max-width: 768px) {
+  :root { --sidebar-w: 0px; }
+  #sidebar { transform: translateX(-240px); width: 240px; transition: transform .3s; }
+  #sidebar.open { transform: translateX(0); --sidebar-w: 240px; }
+  #main { margin-left: 0; }
+  .topbar { padding: 0 1rem; }
+  .topbar-search { width: 140px; }
+  .content { padding: 1rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN SCREEN ===================== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">Quantum D&AI</div>
+    <div class="login-sub">// ADMIN DASHBOARD · ACCÈS SÉCURISÉ</div>
+    <div class="login-group">
+      <label>Email administrateur</label>
+      <input type="email" id="loginEmail" placeholder="admin@quantumdataai.com" value="admin@quantumdataai.com">
+    </div>
+    <div class="login-group">
+      <label>Mot de passe</label>
+      <input type="password" id="loginPwd" placeholder="••••••••" value="admin123">
+    </div>
+    <button class="login-btn" onclick="doLogin()">🔐 Connexion</button>
+    <div class="login-hint">Démo : admin@quantumdataai.com / admin123</div>
+  </div>
+</div>
+
+<!-- ===================== APP SHELL ===================== -->
+<div id="adminApp">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-text">Quantum D&AI</div>
+      <div class="logo-badge">// ADMIN PANEL v2.0</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar">AD</div>
+      <div>
+        <div class="user-name">Administrateur</div>
+        <div class="user-role">Super Admin</div>
+      </div>
+      <div class="online-dot"></div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">// Principal</div>
+      <div class="nav-item active" onclick="showPage('dashboard', this)">
+        <span class="nav-icon">📊</span> Tableau de bord
+      </div>
+      <div class="nav-item" onclick="showPage('leads', this)">
+        <span class="nav-icon">🎯</span> Leads & Prospects
+        <span class="nav-badge">12</span>
+      </div>
+      <div class="nav-item" onclick="showPage('devis', this)">
+        <span class="nav-icon">📋</span> Devis
+        <span class="nav-badge orange">5</span>
+      </div>
+      <div class="nav-item" onclick="showPage('projets', this)">
+        <span class="nav-icon">🚀</span> Projets
+      </div>
+      <div class="nav-item" onclick="showPage('clients', this)">
+        <span class="nav-icon">👥</span> Clients
+      </div>
+
+      <div class="nav-section-title">// Contenu</div>
+      <div class="nav-item" onclick="showPage('blog', this)">
+        <span class="nav-icon">✍️</span> Blog & Articles
+      </div>
+      <div class="nav-item" onclick="showPage('portfolio', this)">
+        <span class="nav-icon">🖼️</span> Portfolio
+      </div>
+      <div class="nav-item" onclick="showPage('messages', this)">
+        <span class="nav-icon">💬</span> Messages
+        <span class="nav-badge">3</span>
+      </div>
+
+      <div class="nav-section-title">// Analyse</div>
+      <div class="nav-item" onclick="showPage('analytics', this)">
+        <span class="nav-icon">📈</span> Analytics SEO
+      </div>
+      <div class="nav-item" onclick="showPage('notifications', this)">
+        <span class="nav-icon">🔔</span> Notifications
+        <span class="nav-badge green">4</span>
+      </div>
+
+      <div class="nav-section-title">// Système</div>
+      <div class="nav-item" onclick="showPage('settings', this)">
+        <span class="nav-icon">⚙️</span> Paramètres
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="sidebar-footer-btn" onclick="window.open('quantum-data-ai.html','_blank')">🌐 Voir le site</button>
+      <button class="sidebar-footer-btn" onclick="doLogout()">🚪 Déco</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title" id="pageTitle">Tableau de bord</div>
+        <div class="topbar-path">Admin / <span id="pagePath">Dashboard</span></div>
+      </div>
+      <div class="topbar-right">
+        <input type="text" class="topbar-search" placeholder="🔍 Rechercher...">
+        <button class="icon-btn" onclick="showPage('notifications', document.querySelectorAll('.nav-item')[9])">🔔<span class="notif-dot"></span></button>
+        <button class="icon-btn" onclick="showPage('settings', document.querySelectorAll('.nav-item')[10])">⚙️</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ===== DASHBOARD ===== -->
+      <div class="page active" id="page-dashboard">
+        <div class="kpi-grid">
+          <div class="kpi-card violet">
+            <div class="kpi-label">Total Leads <span>📊</span></div>
+            <div class="kpi-num violet" data-kpi="leads">0</div>
+            <div class="kpi-change">Sync automatique</div>
+            <div class="kpi-icon">🎯</div>
+          </div>
+          <div class="kpi-card green">
+            <div class="kpi-label">Devis envoyés <span>📋</span></div>
+            <div class="kpi-num green" data-kpi="quotes">0</div>
+            <div class="kpi-change" data-kpi="pending-quotes">0 en attente</div>
+            <div class="kpi-icon">✅</div>
+          </div>
+          <div class="kpi-card orange">
+            <div class="kpi-label">Projets actifs <span>🚀</span></div>
+            <div class="kpi-num orange" data-kpi="active-projects">0</div>
+            <div class="kpi-change" data-kpi="projects">0 total</div>
+            <div class="kpi-icon">⚡</div>
+          </div>
+          <div class="kpi-card cyan">
+            <div class="kpi-label">Total Clients <span>�</span></div>
+            <div class="kpi-num cyan" data-kpi="clients">0</div>
+            <div class="kpi-change" data-kpi="revenue">$0</div>
+            <div class="kpi-icon">�</div>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Leads par mois</div>
+                <div class="chart-sub">Évolution sur 8 mois</div>
+              </div>
+              <div class="chart-period-btns">
+                <button class="period-btn active" onclick="setPeriod(this)">6M</button>
+                <button class="period-btn" onclick="setPeriod(this)">1A</button>
+                <button class="period-btn" onclick="setPeriod(this)">ALL</button>
+              </div>
+            </div>
+            <div class="bar-chart">
+              <div class="bar-col"><div class="bar-fill" style="height:45%"></div><div class="bar-lbl">Mai</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height:60%"></div><div class="bar-lbl">Jun</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height:40%"></div><div class="bar-lbl">Jul</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height:75%"></div><div class="bar-lbl">Aoû</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height:55%"></div><div class="bar-lbl">Sep</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height:85%"></div><div class="bar-lbl">Oct</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height:70%"></div><div class="bar-lbl">Nov</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height:95%"></div><div class="bar-lbl">Déc</div></div>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Services demandés</div>
+                <div class="chart-sub">Répartition globale</div>
+              </div>
+            </div>
+            <div class="donut-wrap">
+              <svg class="donut-svg" viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#161b22" stroke-width="8"/>
+                <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#7b2ff7" stroke-width="8" stroke-dasharray="35 65" stroke-dashoffset="25" opacity=".9"/>
+                <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#00e5ff" stroke-width="8" stroke-dasharray="25 75" stroke-dashoffset="-10" opacity=".85"/>
+                <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#ff9800" stroke-width="8" stroke-dasharray="20 80" stroke-dashoffset="-35" opacity=".85"/>
+                <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#00e676" stroke-width="8" stroke-dasharray="20 80" stroke-dashoffset="-55" opacity=".85"/>
+                <text x="21" y="22" text-anchor="middle" font-size="4" fill="#e6edf3" font-family="Syne,sans-serif" font-weight="700">100%</text>
+              </svg>
+              <div class="donut-legend">
+                <div class="legend-item"><div class="legend-left"><div class="legend-dot" style="background:#7b2ff7"></div>Data Science</div><div class="legend-val">35%</div></div>
+                <div class="legend-item"><div class="legend-left"><div class="legend-dot" style="background:#00e5ff"></div>IA & ML</div><div class="legend-val">25%</div></div>
+                <div class="legend-item"><div class="legend-left"><div class="legend-dot" style="background:#ff9800"></div>BI & Dashboards</div><div class="legend-val">20%</div></div>
+                <div class="legend-item"><div class="legend-left"><div class="legend-dot" style="background:#00e676"></div>Data Engineering</div><div class="legend-val">20%</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="data-card">
+            <div class="data-card-header">
+              <div class="data-card-title">🔥 Derniers leads</div>
+              <button class="action-btn" onclick="showPage('leads', document.querySelectorAll('.nav-item')[1])">Voir tout →</button>
+            </div>
+            <div class="mini-list">
+              <div class="mini-list-item">
+                <div class="mini-list-item-left"><span class="avatar-sm">SA</span><div><div style="font-size:.83rem;font-weight:600;color:var(--white);">Société AgroChad</div><div style="font-size:.72rem;color:var(--muted);">Data Science · Hier</div></div></div>
+                <span class="status-badge new">Nouveau</span>
+              </div>
+              <div class="mini-list-item">
+                <div class="mini-list-item-left"><span class="avatar-sm">BN</span><div><div style="font-size:.83rem;font-weight:600;color:var(--white);">Banque Nationale</div><div style="font-size:.72rem;color:var(--muted);">IA & ML · Il y a 2j</div></div></div>
+                <span class="status-badge inprogress">En cours</span>
+              </div>
+              <div class="mini-list-item">
+                <div class="mini-list-item-left"><span class="avatar-sm">TT</span><div><div style="font-size:.83rem;font-weight:600;color:var(--white);">TelecomTchad</div><div style="font-size:.72rem;color:var(--muted);">BI · Il y a 3j</div></div></div>
+                <span class="status-badge done">Converti</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="data-card">
+            <div class="data-card-header">
+              <div class="data-card-title">📈 Activité récente</div>
+            </div>
+            <div class="activity-feed">
+              <div class="activity-item">
+                <div class="activity-dot" style="background:var(--green);"></div>
+                <div>
+                  <div class="activity-text"><strong>Nouveau lead</strong> de Société AgroChad (Data Science)</div>
+                  <div class="activity-time">Il y a 2 heures</div>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="activity-dot" style="background:var(--violet);"></div>
+                <div>
+                  <div class="activity-text"><strong>Devis #DV-2025-011</strong> accepté par Banque Nationale</div>
+                  <div class="activity-time">Il y a 5 heures</div>
+                </div>
+              </div>
+              <div class="activity-item">
+                <div class="activity-dot" style="background:var(--cyan);"></div>
+                <div>
+                  <div class="activity-text"><strong>Article blog</strong> "LLMs en Afrique" atteint 1,247 vues</div>
+                  <div class="activity-time">Il y a 1 jour</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== LEADS ===== -->
+      <div class="page" id="page-leads">
+        <div class="data-card">
+          <div class="data-card-header">
+            <div class="data-card-title">🎯 Gestion des Leads <span id="leadsCount">(0)</span></div>
+            <div class="table-actions">
+              <button class="action-btn">⬇ Export</button>
+              <button class="action-btn primary" onclick="openModal('addLeadModal')">+ Nouveau lead</button>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>Nom</th><th>Entreprise</th><th>Service</th><th>Email</th><th>Priorité</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody id="leadsTableBody">
+              <!-- Les données seront chargées depuis la base de données -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== DEVIS ===== -->
+      <div class="page" id="page-devis">
+        <div class="data-card">
+          <div class="data-card-header">
+            <div class="data-card-title">📋 Gestion des Devis <span id="quotesCount">(0)</span></div>
+            <div class="table-actions">
+              <button class="action-btn">⬇ Export</button>
+              <button class="action-btn primary" onclick="openModal('addDevisModal')">+ Nouveau devis</button>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>Numéro</th><th>Client</th><th>Service</th><th>Montant</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="quotesTableBody">
+              <!-- Les données seront chargées depuis la base de données -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== PROJETS ===== -->
+      <div class="page" id="page-projets">
+        <div class="kpi-grid">
+          <div class="kpi-card green"><div class="kpi-label">En cours</div><div class="kpi-num green" data-kpi="active-projects">0</div><div class="kpi-icon">🚀</div></div>
+          <div class="kpi-card violet"><div class="kpi-label">Total</div><div class="kpi-num violet" data-kpi="projects">0</div><div class="kpi-icon">✅</div></div>
+          <div class="kpi-card orange"><div class="kpi-label">En retard</div><div class="kpi-num orange">0</div><div class="kpi-icon">⚠️</div></div>
+          <div class="kpi-card cyan"><div class="kpi-label">CA projets</div><div class="kpi-num cyan" data-kpi="revenue">$0</div><div class="kpi-icon">💰</div></div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-header">
+            <div class="data-card-title">🚀 Projets actifs</div>
+            <button class="action-btn primary" onclick="openModal('addProjetModal')">+ Nouveau projet</button>
+          </div>
+          <table>
+            <thead><tr><th>Projet</th><th>Client</th><th>Service</th><th>Progression</th><th>Deadline</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody id="projectsTableBody">
+              <!-- Les données seront chargées depuis la base de données -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== CLIENTS ===== -->
+      <div class="page" id="page-clients">
+        <div class="data-card">
+          <div class="data-card-header">
+            <div class="data-card-title">👥 Base clients <span id="clientsCount">(0)</span></div>
+            <div class="table-actions">
+              <button class="action-btn">⬇ Export</button>
+              <button class="action-btn primary" onclick="openModal('addClientModal')">+ Ajouter client</button>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>Client</th><th>Secteur</th><th>Projets</th><th>CA total</th><th>Depuis</th><th>Actions</th></tr></thead>
+            <tbody id="clientsTableBody">
+              <!-- Les données seront chargées depuis la base de données -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== BLOG ===== -->
+      <div class="page" id="page-blog">
+        <div class="data-card">
+          <div class="data-card-header">
+            <div class="data-card-title">✍️ Gestion du Blog <span id="blogCount">(0)</span></div>
+            <button class="action-btn primary" onclick="openModal('addBlogModal')">+ Nouvel article</button>
+          </div>
+          <table>
+            <thead><tr><th>Titre</th><th>Catégorie</th><th>Auteur</th><th>Vues</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="blogTableBody">
+              <!-- Les données seront chargées depuis la base de données -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== PORTFOLIO ===== -->
+      <div class="page" id="page-portfolio">
+        <div class="data-card">
+          <div class="data-card-header">
+            <div class="data-card-title">🖼️ Projets Portfolio (6)</div>
+            <button class="action-btn primary" onclick="openModal('addPortfolioModal')">+ Ajouter projet</button>
+          </div>
+          <table>
+            <thead><tr><th>Projet</th><th>Catégorie</th><th>Client</th><th>Résultat clé</th><th>Visible</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><div class="td-name">Chatbot bancaire NLP</div></td>
+                <td><span class="tag" style="font-size:.62rem;">IA</span></td>
+                <td style="color:var(--muted);font-size:.82rem;">Banque Nationale</td>
+                <td style="color:var(--green);font-size:.8rem;">-40% appels support</td>
+                <td><div class="toggle on" onclick="this.classList.toggle('on')"></div></td>
+                <td><div class="row-actions"><button class="row-btn" onclick="showToast('✏️ Édition portfolio')">✏️</button><button class="row-btn" onclick="showToast('🗑️ Supprimé')">🗑️</button></div></td>
+              </tr>
+              <tr>
+                <td><div class="td-name">Dashboard exécutif Télécoms</div></td>
+                <td><span class="tag" style="font-size:.62rem;">BI</span></td>
+                <td style="color:var(--muted);font-size:.82rem;">TelecomTchad</td>
+                <td style="color:var(--green);font-size:.8rem;">12 KPIs temps réel</td>
+                <td><div class="toggle on" onclick="this.classList.toggle('on')"></div></td>
+                <td><div class="row-actions"><button class="row-btn" onclick="showToast('✏️ Édition portfolio')">✏️</button><button class="row-btn" onclick="showToast('🗑️ Supprimé')">🗑️</button></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== MESSAGES ===== -->
+      <div class="page" id="page-messages">
+        <div class="data-card">
+          <div class="data-card-header">
+            <div class="data-card-title">💬 Messages reçus <span id="messagesCount">(0)</span></div>
+            <button class="action-btn" onclick="showToast('✅ Tous marqués comme lus')">Tout marquer lu</button>
+          </div>
+          <div class="notif-list" id="messagesList">
+            <!-- Les données seront chargées depuis la base de données -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ANALYTICS ===== -->
+      <div class="page" id="page-analytics">
+        <div class="kpi-grid">
+          <div class="kpi-card violet"><div class="kpi-label">Visiteurs / mois</div><div class="kpi-num violet">4,231</div><div class="kpi-change up">▲ +18%</div><div class="kpi-icon">👁️</div></div>
+          <div class="kpi-card cyan"><div class="kpi-label">Pages vues</div><div class="kpi-num cyan">12.4K</div><div class="kpi-change up">▲ +23%</div><div class="kpi-icon">📄</div></div>
+          <div class="kpi-card green"><div class="kpi-label">Taux conversion</div><div class="kpi-num green">4.2%</div><div class="kpi-change up">▲ +0.8%</div><div class="kpi-icon">🎯</div></div>
+          <div class="kpi-card orange"><div class="kpi-label">Taux de rebond</div><div class="kpi-num orange">38%</div><div class="kpi-change down">▼ -5% ✓</div><div class="kpi-icon">↩️</div></div>
+        </div>
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div><div class="chart-title">Trafic hebdomadaire</div><div class="chart-sub">Visiteurs uniques / semaine</div></div>
+            </div>
+            <div class="bar-chart">
+              <div class="bar-col"><div class="bar-fill" style="height:55%"></div><div class="bar-lbl">Lun</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height:70%"></div><div class="bar-lbl">Mar</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height:60%"></div><div class="bar-lbl">Mer</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height:90%"></div><div class="bar-lbl">Jeu</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height:80%"></div><div class="bar-lbl">Ven</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height:40%"></div><div class="bar-lbl">Sam</div></div>
+              <div class="bar-col"><div class="bar-fill" style="height:30%"></div><div class="bar-lbl">Dim</div></div>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <div><div class="chart-title">Sources de trafic</div><div class="chart-sub">Répartition des canaux</div></div>
+            </div>
+            <div class="donut-wrap">
+              <svg class="donut-svg" viewBox="0 0 42 42">
+                <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#161b22" stroke-width="8"/>
+                <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#00e5ff" stroke-width="8" stroke-dasharray="40 60" stroke-dashoffset="25"/>
+                <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#7b2ff7" stroke-width="8" stroke-dasharray="30 70" stroke-dashoffset="-15"/>
+                <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#00e676" stroke-width="8" stroke-dasharray="20 80" stroke-dashoffset="-45"/>
+                <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#ff9800" stroke-width="8" stroke-dasharray="10 90" stroke-dashoffset="-65"/>
+              </svg>
+              <div class="donut-legend">
+                <div class="legend-item"><div class="legend-left"><div class="legend-dot" style="background:#00e5ff"></div>Organique</div><div class="legend-val">40%</div></div>
+                <div class="legend-item"><div class="legend-left"><div class="legend-dot" style="background:#7b2ff7"></div>Direct</div><div class="legend-val">30%</div></div>
+                <div class="legend-item"><div class="legend-left"><div class="legend-dot" style="background:#00e676"></div>Réseaux</div><div class="legend-val">20%</div></div>
+                <div class="legend-item"><div class="legend-left"><div class="legend-dot" style="background:#ff9800"></div>Référents</div><div class="legend-val">10%</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== NOTIFICATIONS ===== -->
+      <div class="page" id="page-notifications">
+        <div class="data-card">
+          <div class="data-card-header">
+            <div class="data-card-title">🔔 Notifications <span id="notificationsCount">(0)</span></div>
+            <button class="action-btn" onclick="showToast('✅ Toutes les notifications marquées comme lues')">Tout marquer lu</button>
+          </div>
+          <div class="notif-list" id="notificationsList">
+            <!-- Les données seront chargées depuis la base de données -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SETTINGS ===== -->
+      <div class="page" id="page-settings">
+        <div class="settings-grid">
+          <div class="settings-nav-card">
+            <div class="settings-nav-item active" onclick="switchSettingsTab(this)">👤 Profil</div>
+            <div class="settings-nav-item" onclick="switchSettingsTab(this)">🔐 Sécurité</div>
+            <div class="settings-nav-item" onclick="switchSettingsTab(this)">🔔 Notifications</div>
+            <div class="settings-nav-item" onclick="switchSettingsTab(this)">🎨 Apparence</div>
+            <div class="settings-nav-item" onclick="switchSettingsTab(this)">📧 Email & CRM</div>
+            <div class="settings-nav-item" onclick="switchSettingsTab(this)">🌐 Site web</div>
+            <div class="settings-nav-item" onclick="switchSettingsTab(this)">📊 Analytics</div>
+            <div class="settings-nav-item" onclick="switchSettingsTab(this)">🔑 API & Intégrations</div>
+          </div>
+          <div class="settings-content">
+            <div class="settings-section">
+              <h3>👤 Informations du profil</h3>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div class="form-group"><label>Nom complet</label><input value="Administrateur Quantum"></div>
+                <div class="form-group"><label>Email</label><input value="admin@quantumdataai.com"></div>
+                <div class="form-group"><label>Téléphone</label><input value="+235 61 00 59 53"></div>
+                <div class="form-group"><label>Rôle</label><input value="Super Admin" readonly></div>
+              </div>
+              <div class="form-group"><label>Biographie</label><textarea>Administrateur principal de la plateforme Quantum Data & AI.</textarea></div>
+              <button class="btn-grad" onclick="showToast('✅ Profil mis à jour avec succès')">Sauvegarder les modifications</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+
+</div><!-- /adminApp -->
+
+<!-- ===================== MODALS ===================== -->
+
+<!-- Add Lead -->
+<div class="modal-overlay" id="addLeadModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('addLeadModal')">×</button>
+    <div class="modal-title">🎯 Nouveau Lead</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <div class="form-group"><label>Prénom</label><input placeholder="Prénom du contact"></div>
+      <div class="form-group"><label>Nom</label><input placeholder="Nom de famille"></div>
+    </div>
+    <div class="form-group"><label>Email</label><input type="email" placeholder="contact@entreprise.com"></div>
+    <div class="form-group"><label>Entreprise</label><input placeholder="Nom de l'entreprise"></div>
+    <div class="form-group"><label>Service intéressé</label>
+      <select><option>Data Science</option><option>IA & ML</option><option>BI & Dashboards</option><option>Data Engineering</option></select>
+    </div>
+    <div class="form-group"><label>Priorité</label>
+      <select><option>🔴 Haute</option><option>🟠 Moyenne</option><option>🟢 Basse</option></select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('addLeadModal')">Annuler</button>
+      <button class="btn-grad" onclick="addLead()">Ajouter le lead</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Devis -->
+<div class="modal-overlay" id="addDevisModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('addDevisModal')">×</button>
+    <div class="modal-title">📋 Nouveau Devis</div>
+    <div class="form-group"><label>Client</label><input placeholder="Nom du client"></div>
+    <div class="form-group"><label>Service</label>
+      <select><option>Data Science</option><option>IA & ML</option><option>BI & Dashboards</option><option>Data Engineering</option></select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <div class="form-group"><label>Montant ($)</label><input type="number" placeholder="0"></div>
+      <div class="form-group"><label>Délai (jours)</label><input type="number" placeholder="30"></div>
+    </div>
+    <div class="form-group"><label>Description</label><textarea placeholder="Description du service..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('addDevisModal')">Annuler</button>
+      <button class="btn-grad" onclick="closeModal('addDevisModal'); showToast('📋 Devis créé avec succès')">Créer le devis</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Projet -->
+<div class="modal-overlay" id="addProjetModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('addProjetModal')">×</button>
+    <div class="modal-title">🚀 Nouveau Projet</div>
+    <div class="form-group"><label>Nom du projet</label><input placeholder="Ex : Dashboard BI Bancaire"></div>
+    <div class="form-group"><label>Client</label><input placeholder="Nom du client"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <div class="form-group"><label>Service</label>
+        <select><option>Data Science</option><option>IA & ML</option><option>BI & Dashboards</option></select>
+      </div>
+      <div class="form-group"><label>Deadline</label><input type="date"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('addProjetModal')">Annuler</button>
+      <button class="btn-grad" onclick="closeModal('addProjetModal'); showToast('🚀 Projet créé avec succès')">Créer le projet</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Client -->
+<div class="modal-overlay" id="addClientModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('addClientModal')">×</button>
+    <div class="modal-title">👥 Nouveau Client</div>
+    <div class="form-group"><label>Nom / Entreprise</label><input placeholder="Nom de l'entreprise"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <div class="form-group"><label>Email</label><input type="email" placeholder="contact@"></div>
+      <div class="form-group"><label>Secteur</label><input placeholder="Ex: Finance"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('addClientModal')">Annuler</button>
+      <button class="btn-grad" onclick="closeModal('addClientModal'); showToast('👥 Client ajouté avec succès')">Ajouter le client</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Blog -->
+<div class="modal-overlay" id="addBlogModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('addBlogModal')">×</button>
+    <div class="modal-title">✍️ Nouvel Article</div>
+    <div class="form-group"><label>Titre de l'article</label><input placeholder="Titre accrocheur..."></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <div class="form-group"><label>Catégorie</label>
+        <select><option>IA Générative</option><option>Data Science</option><option>BI</option><option>Data Engineering</option></select>
+      </div>
+      <div class="form-group"><label>Statut</label>
+        <select><option>Brouillon</option><option>Publié</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label>Résumé</label><textarea placeholder="Résumé de l'article..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('addBlogModal')">Annuler</button>
+      <button class="btn-grad" onclick="closeModal('addBlogModal'); showToast('✍️ Article créé avec succès')">Créer l'article</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Portfolio -->
+<div class="modal-overlay" id="addPortfolioModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('addPortfolioModal')">×</button>
+    <div class="modal-title">🖼️ Nouveau Projet Portfolio</div>
+    <div class="form-group"><label>Nom du projet</label><input placeholder="Ex: Chatbot NLP"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <div class="form-group"><label>Catégorie</label>
+        <select><option>IA</option><option>BI</option><option>Data Science</option><option>Automation</option></select>
+      </div>
+      <div class="form-group"><label>Client</label><input placeholder="Nom du client"></div>
+    </div>
+    <div class="form-group"><label>Résultat clé</label><input placeholder="Ex: -40% appels support"></div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('addPortfolioModal')">Annuler</button>
+      <button class="btn-grad" onclick="closeModal('addPortfolioModal'); showToast('🖼️ Projet portfolio ajouté')">Ajouter au portfolio</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><span id="toastMsg">Action effectuée</span></div>
+
+<script src="js/admin.js"></script>
+</body>
+</html>
