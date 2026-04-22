@@ -1,7 +1,10 @@
 // Database-integrated forms for the main website
 class FormsHandler {
     constructor() {
-        this.apiBase = './api/';
+        // Utilise la config externe si disponible, sinon fallback local
+        this.apiBase = (typeof API_CONFIG !== 'undefined' && API_CONFIG.baseURL) 
+            ? API_CONFIG.baseURL 
+            : './api/';
         this.init();
     }
 
