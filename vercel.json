@@ -3,11 +3,15 @@
   "name": "quantum-data-ai",
   "builds": [
     {
-      "src": "index.html",
+      "src": "**/*.html",
       "use": "@vercel/static"
     }
   ],
   "routes": [
+    {
+      "src": "/article\\.html",
+      "dest": "/article.html"
+    },
     {
       "src": "/(.*)",
       "dest": "/$1"
