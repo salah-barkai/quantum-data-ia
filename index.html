@@ -1788,8 +1788,18 @@ function showToast(msg, icon = '✅') {
 }
 
 // Initialize language after showToast is defined (for Vercel compatibility)
-if (typeof initLang === 'function') {
-  initLang();
+// Attendre que le DOM soit completement charge
+function initTranslation() {
+  if (typeof initLang === 'function') {
+    initLang();
+  }
+}
+
+// Appeler initTranslation quand le DOM est pret
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initTranslation);
+} else {
+  initTranslation();
 }
 
 /* =============================================

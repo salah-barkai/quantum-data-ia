@@ -206,7 +206,10 @@ function setLang(lang) {
   // Save preference to localStorage
   localStorage.setItem('lang', lang);
   
-  showToast(`Langue : ${lang.toUpperCase()}`);
+  // Notification seulement si showToast existe (evite erreur sur Vercel)
+  if (typeof showToast === 'function') {
+    showToast(`Langue : ${lang.toUpperCase()}`);
+  }
 }
 
 // Initialize language from localStorage or default
