@@ -32,12 +32,18 @@ const translations = {
     about_subtitle: 'Fondée par des experts en data science et IA, Quantum Data & AI est née d\'une conviction : les données africaines recèlent un potentiel immense encore sous-exploité. Notre mission est de le libérer.',
     about_value_1: 'Expertise de terrain',
     about_value_1_text: 'Solutions adaptées aux réalités africaines, avec une compréhension fine des contextes locaux.',
+    about_value_2: 'Livraison rapide & agile',
+    about_value_2_text: 'Méthodologies agiles pour des résultats tangibles en quelques semaines, pas des mois.',
+    about_value_3: 'Sécurité & conformité',
+    about_value_3_text: 'Gouvernance des données rigoureuse, conforme aux standards internationaux de protection.',
     
     // Portfolio
     portfolio_title: 'Nos réalisations',
     filter_all: 'Tous',
     filter_ia: 'IA',
     filter_bi: 'BI',
+    filter_data: 'Data Science',
+    filter_auto: 'Automation',
     
     // Blog
     blog_title: 'Blog expert',
@@ -91,12 +97,18 @@ const translations = {
     about_subtitle: 'Founded by data science and AI experts, Quantum Data & AI was born from a conviction: African data holds immense yet underexploited potential. Our mission is to unleash it.',
     about_value_1: 'Field Expertise',
     about_value_1_text: 'Solutions adapted to African realities, with a deep understanding of local contexts.',
+    about_value_2: 'Fast & Agile Delivery',
+    about_value_2_text: 'Agile methodologies for tangible results in weeks, not months.',
+    about_value_3: 'Security & Compliance',
+    about_value_3_text: 'Rigorous data governance, compliant with international data protection standards.',
     
     // Portfolio
     portfolio_title: 'Our Work',
     filter_all: 'All',
     filter_ia: 'AI',
     filter_bi: 'BI',
+    filter_data: 'Data Science',
+    filter_auto: 'Automation',
     
     // Blog
     blog_title: 'Expert Blog',
@@ -150,12 +162,18 @@ const translations = {
     about_subtitle: 'Fundada por expertos en ciencia de datos e IA, Quantum Data & AI nació de una convicción: los datos africanos tienen un potencial inmenso aún subexplotado. Nuestra misión es liberarlo.',
     about_value_1: 'Experiencia de Campo',
     about_value_1_text: 'Soluciones adaptadas a las realidades africanas, con una profunda comprensión de los contextos locales.',
+    about_value_2: 'Entrega Rápida y Ágil',
+    about_value_2_text: 'Metodologías ágiles para resultados tangibles en semanas, no meses.',
+    about_value_3: 'Seguridad y Cumplimiento',
+    about_value_3_text: 'Gobernanza de datos rigurosa, conforme a los estándares internacionales de protección.',
     
     // Portfolio
     portfolio_title: 'Nuestro Trabajo',
     filter_all: 'Todos',
     filter_ia: 'IA',
     filter_bi: 'BI',
+    filter_data: 'Data Science',
+    filter_auto: 'Automatización',
     
     // Blog
     blog_title: 'Blog Experto',
@@ -184,7 +202,7 @@ let currentLang = 'fr';
 function setLang(lang) {
   currentLang = lang;
   
-  // Update active button
+  // Update active button immediately
   document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.classList.remove('active');
     if (btn.textContent.toLowerCase() === lang) {
@@ -192,10 +210,11 @@ function setLang(lang) {
     }
   });
   
-  // Translate all elements with data-lang attribute
-  document.querySelectorAll('[data-lang]').forEach(el => {
+  // Translate all elements with data-lang attribute (batch for performance)
+  const elements = document.querySelectorAll('[data-lang]');
+  elements.forEach(el => {
     const key = el.getAttribute('data-lang');
-    if (translations[lang][key]) {
+    if (translations[lang] && translations[lang][key]) {
       el.textContent = translations[lang][key];
     }
   });
