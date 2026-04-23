@@ -215,9 +215,5 @@ function initLang() {
   setLang(savedLang);
 }
 
-// Call initLang when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initLang);
-} else {
-  initLang();
-}
+// NOTE: initLang() doit être appelé depuis index.html APRES la definition de showToast
+// pour eviter les erreurs sur Vercel

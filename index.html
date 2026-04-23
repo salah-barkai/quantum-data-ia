@@ -1787,6 +1787,11 @@ function showToast(msg, icon = '✅') {
   setTimeout(() => toast.classList.remove('show'), 3500);
 }
 
+// Initialize language after showToast is defined (for Vercel compatibility)
+if (typeof initLang === 'function') {
+  initLang();
+}
+
 /* =============================================
    MODALS
 ============================================= */

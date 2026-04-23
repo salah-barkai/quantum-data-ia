@@ -329,44 +329,87 @@
 
   <script>
     const articleId = new URLSearchParams(window.location.search).get('id');
+    let allArticles = []; // Stocke tous les articles pour les recommandations
 
     async function loadArticle() {
       if (!articleId) {
-        document.getElementById('articleContent').innerHTML = '<div class="error">Article non trouvé</div>';
+        showError('Article non trouvé - ID manquant');
         return;
       }
 
+      // Afficher le loader
+      document.getElementById('articleContent').innerHTML = `
+        <div style="text-align:center;padding:3rem;color:var(--muted);">
+          <div style="font-size:2rem;margin-bottom:1rem;">⏳</div>
+          <p>Chargement de l'article...</p>
+        </div>
+      `;
+
       try {
-        const response = await fetch(`./api/articles.php?id=${articleId}`);
-        const result = await response.json();
+        // Charger l'article spécifique
+        const articleResponse = await fetch(`./api/articles.php?id=${articleId}`);
+        const articleResult = await articleResponse.json();
         
-        if (result.success && result.data) {
-          renderArticle(result.data);
+        // Charger tous les articles pour les recommandations
+        const allResponse = await fetch('./api/articles.php');
+        const allResult = await allResponse.json();
+        
+        if (allResult.success && allResult.data) {
+          allArticles = Array.isArray(allResult.data) ? allResult.data : Object.values(allResult.data);
+        }
+        
+        if (articleResult.success && articleResult.data) {
+          renderArticle(articleResult.data);
         } else {
-          document.getElementById('articleContent').innerHTML = '<div class="error">Article non trouvé</div>';
+          showError('Article non trouvé');
         }
       } catch (error) {
         console.error('Error loading article:', error);
-        document.getElementById('articleContent').innerHTML = '<div class="error">Erreur lors du chargement de l\'article</div>';
+        showError('Erreur lors du chargement de l\'article. Vérifiez votre connexion.');
       }
+    }
+
+    function showError(message) {
+      document.getElementById('articleContent').innerHTML = `
+        <div style="text-align:center;padding:3rem;">
+          <div style="font-size:3rem;margin-bottom:1rem;">😕</div>
+          <h2 style="color:var(--text);margin-bottom:1rem;">${message}</h2>
+          <a href="index.html#blog" style="color:var(--cyan);text-decoration:none;">← Retour au blog</a>
+        </div>
+      `;
     }
 
     function renderArticle(article) {
       const container = document.getElementById('articleContent');
+      
+      // Filtrer les articles similaires (même catégorie ou autres articles)
+      const relatedArticles = allArticles
+        .filter(a => a.id != articleId) // Exclure l'article actuel
+        .slice(0, 2); // Prendre les 2 premiers
+      
+      // Générer les cartes d'articles similaires
+      const relatedHTML = relatedArticles.map(a => `
+        <div class="related-card" onclick="window.location.href='article.html?id=${a.id}'" style="cursor:pointer;">
+          <span class="article-tag" style="font-size:0.65rem;">${a.category || 'Article'}</span>
+          <h4>${a.title}</h4>
+          <p>${a.excerpt ? a.excerpt.substring(0, 80) + '...' : 'Lire la suite...'}</p>
+        </div>
+      `).join('');
+      
       container.innerHTML = `
         <div class="article-header">
           <div class="article-meta">
-            <span class="article-tag">${article.category}</span>
-            <span class="article-date">${new Date(article.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+            <span class="article-tag">${article.category || 'Article'}</span>
+            <span class="article-date">${article.created_at ? new Date(article.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}</span>
           </div>
           <h1 class="article-title">${article.title}</h1>
-          <p class="article-excerpt">${article.excerpt}</p>
+          <p class="article-excerpt">${article.excerpt || ''}</p>
         </div>
 
         <div class="article-image">${article.icon || '📄'}</div>
 
         <div class="article-content">
-          ${article.content}
+          ${article.content || '<p>Contenu en cours de rédaction...</p>'}
         </div>
 
         <div class="author-box">
@@ -377,21 +420,14 @@
           </div>
         </div>
 
+        ${relatedArticles.length > 0 ? `
         <div class="related-articles">
           <h3 class="related-title">Articles similaires</h3>
           <div class="related-grid">
-            <div class="related-card" onclick="window.location.href='article.html?id=2'">
-              <span class="article-tag" style="font-size:0.65rem;">Data Engineering</span>
-              <h4>5 pipelines ETL indispensables pour les PME</h4>
-              <p>Les architectures de données qui font la différence en 2025...</p>
-            </div>
-            <div class="related-card" onclick="window.location.href='article.html?id=3'">
-              <span class="article-tag" style="font-size:0.65rem;">Machine Learning</span>
-              <h4>Prédiction de churn : guide complet</h4>
-              <p>De la collecte des données au déploiement du modèle en production...</p>
-            </div>
+            ${relatedHTML}
           </div>
         </div>
+        ` : ''}
       `;
 
       document.title = `${article.title} - Quantum Data & AI`;
